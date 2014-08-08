@@ -21,35 +21,47 @@
 
 library(png)
 
-if(!file.exists(downloadedFile)){
-  download.file("linkForDownloading", "destFile.txt")
-}
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 1. LOAD THE DATA
 
-# first, Load the file:
+# set up directories and file names:
 file_dir <- "/Users/rbower_lt/Documents/Ryan Docs/Coursera/Exploratory Data Analysis"
 input_file <- paste(file_dir, "household_power_consumption.txt", sep="/")
+input_zip <- paste(file_dir, "household_power_consumption.zip", sep="/")
+
+# if the file does not yet exist, download it:
+if(!file.exists(input_file)){
+  download.file("https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2Fhousehold_power_consumption.zip", 
+                destfile=input_zip, , method="curl")
+  unz(input_zip, filename=input_file)
+}
+
+# read the file:
 power_consumption <- read.table(input_file, header=TRUE, sep=";",na.strings = "?")
 
-
-# set the Date field to be a date type, and filter down to the data we need.
+# set the Date field to be a date type, and filter down to the data we need:
 power_consumption$Date <- as.Date(power_consumption$Date, format="%d/%m/%Y")
 power_consumption <- power_consumption[power_consumption$Date >= '2007-02-01' & 
                                          power_consumption$Date <= '2007-02-02',]
 
+# create a date-time field for the line plots:
 power_consumption$DateTime <- strptime(paste(power_consumption$Date, power_consumption$Time, sep=" "),
                                        format="%Y-%m-%d %H:%M:%S")
-summary(power_consumption)
-dplyr::glimpse(power_consumption)
 
-# create a PNG file name and open up the plot
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 2. CREATE THE PLOTS:
+
+# create a PNG file name and open up the plot:
 plot_name <- paste(file_dir, "plot3.png", sep="/")
-png(plot_name, width=480, height=480, units="px")
+png(plot_name, width=480, height=480, units="px", bg="transparent")
 
-# create an empty plot object (without an x-axis)
+# create an empty plot object (without an x-axis):
 plot(power_consumption$Sub_metering_1, pch="",
      ylab="Energy sub metering",
      xlab="", xaxt='n')
-# now add the line representing Global Active Power
+
+# now add the line representing Global Active Power:
 lines(power_consumption$Sub_metering_1, col="Black")
 lines(power_consumption$Sub_metering_2, col="Red")
 lines(power_consumption$Sub_metering_3, col="Blue")
